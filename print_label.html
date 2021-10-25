@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>ラベル印刷</title>
+<script>
+// シートデータ（シート幅、高さ、上余白、左余白、面、ラベル幅、高さ、横隙間、縦隙間）
+// はがき：10面、はがき：16面、はがき：22面、A4：12面、A4：21面、A4：95面
+const data = [[100, 148, 8, 8.5, 10, 40, 24, 3, 3],
+    [100, 148.5, 19.25, 16, 16, 33, 12, 2, 2],
+    [100, 148.5, 20.25, 13, 22, 36, 8, 2, 2],
+    [210, 297, 21.2, 18.6, 12, 86.4, 42.3, 0, 0],
+    [210, 297, 14.8, 0, 21, 70, 38.1, 0, 0],
+    [210, 297, 16.5, 13.5, 95, 35, 12, 2, 2]];
+
+const init = () => {
+    // はがき：10面のシートを表示
+    setSheet(0);
+}
+
+const setSheet = n => {
+    // シート、ラベル情報をセット
+    document.getElementById("sheet_width").value = data[n][0];
+    document.getElementById("sheet_height").value = data[n][1];
+    document.getElementById("sheet_top").value = data[n][2];
+    document.getElementById("sheet_left").value = data[n][3];
+    document.getElementById("label_num").value = data[n][4];
+    document.getElementById("label_width").value = data[n][5];
+    document.getElementById("label_height").value = data[n][6];
+    document.getElementById("label_right").value = data[n][7];
+    document.getElementById("label_bottom").value = data[n][8];
+    // シートを反映
+    changeSheet();
+}
+
+const changeSheet = () => {
+    // シート、ラベル情報の取得
+    const sw = document.getElementById("sheet_width").value;
+    const sh = document.getElementById("sheet_height").value;
+    const st = document.getElementById("sheet_top").value;
+    const sl = document.getElementById("sheet_left").value;
+    const num = document.getElementById("label_num").value;
+    const lw = document.getElementById("label_width").value;
+    const lh = document.getElementById("label_height").value;
+    const lr = document.getElementById("label_right").value;
+    const lb = document.getElementById("label_bottom").value;
+    const size = document.getElementById("font_size").value;
+    const font = document.getElementById("font").value;
+    const bold = document.getElementById("bold").value;
+    const color = document.getElementById("color").value;
+    // 用紙サイズ(@page)を変更
+    const style = document.getElementById("page");
+    style.innerText = `@page {size: ${sw}mm ${sh}mm; margin: 0px;}`;
+    // CSS変数に値をセット
+    const root = document.documentElement;
+    root.style.setProperty("--sheet_width", `${sw-sl}mm`);
+    root.style.setProperty("--sheet_height", `${sh-st}mm`);
+    root.style.setProperty("--sheet_top", `${st}mm`);
+    root.style.setProperty("--sheet_left", `${sl}mm`);
+    root.style.setProperty("--label_width", `${lw}mm`);
+    root.style.setProperty("--label_height", `${lh}mm`);
+    root.style.setProperty("--label_right", `${lr}mm`);
+    root.style.setProperty("--label_bottom", `${lb}mm`);
+    root.style.setProperty("--font_size", `${size}pt`);
+    root.style.setProperty("--font_family", font);
+    let weight = "normal";
+    if (bold) weight = "bold";
+    root.style.setProperty("--font_weight", weight);
+    root.style.setProperty("--font_color", color);
+    // ラベル作成
+    document.getElementById("sheet").innerHTML = "";
+    for (let i = 0; i < num; i++) {
+        const label = document.createElement("div");
+        label.className =  "label";
+        const span = document.createElement("span");
+        label.appendChild(span);
+        document.getElementById("sheet").appendChild(label);
+    }
+    // ラベルにテキストをセット
+    setText();
+}
+
+const setText = () => {
+    // 全ラベルにテキストをセット
+    const text = document.getElementById("text").value;
+    for (const label of document.getElementById("sheet").children) {
+        label.firstElementChild.innerText = text;
+    }
+}
+</script>
+<style>
+#sheet {
+    width: var(--sheet_width);
+    height: var(--sheet_height);
+    padding-top: var(--sheet_top);
+    padding-left: var(--sheet_left);
+}
+.label {
+    float: left;
+    width: var(--label_width);
+    height: var(--label_height);
+    margin-right: var(--label_right);
+    margin-bottom: var(--label_bottom);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.label span {
+    font-size: var(--font_size);
+    font-family: var(--font_family);
+    font-weight: var(--font_weight);
+    color: var(--font_color);
+}
+input[type="number"] {width: 50px;}
+#text {
+    width: 300px;
+    height: 40px;
+    vertical-align: top;
+}
+@media screen {
+    #sheet {box-shadow: 2px 2px 10px #666666;}
+    .label {outline: thin solid #339999;}
+}
+@media print {
+    body {margin: 0px;}
+    p,input,hr,form {display: none;}
+}
+</style>
+<style id="page"></style>
+</head>
+<body onload="init()">
+<p>ラベル印刷</p>
+<input type="button" value="印刷" onclick="window.print()">
+<input type="button" value="はがき：10面" onclick="setSheet(0)">
+<input type="button" value="はがき：16面" onclick="setSheet(1)">
+<input type="button" value="はがき：22面" onclick="setSheet(2)">
+<input type="button" value="A4：12面" onclick="setSheet(3)">
+<input type="button" value="A4：21面" onclick="setSheet(4)">
+<input type="button" value="A4：95面" onclick="setSheet(5)">
+<hr>
+<form onchange="changeSheet()">
+【シート】
+幅：<input type="number" id="sheet_width" step="0.1">
+高さ：<input type="number" id="sheet_height" step="0.1">
+上余白：<input type="number" id="sheet_top" step="0.05">
+左余白：<input type="number" id="sheet_left" step="0.05">
+面：<input type="number" id="label_num" min="1">
+<hr>
+【ラベル】
+幅：<input type="number" id="label_width" step="0.1">
+高さ：<input type="number" id="label_height" step="0.1">
+横隙間：<input type="number" id="label_right" step="0.1">
+縦隙間：<input type="number" id="label_bottom" step="0.1">
+<hr>
+【テキスト】
+<textarea id="text" oninput="setText()">テキスト</textarea>
+<select id="font">
+<option value="sans-serif" selected>sans-serif</option>
+<option value="serif">serif</option>
+<option value="monospace">monospace</option>
+<option value="cursive">cursive</option>
+<option value="fantasy">fantasy</option>
+</select>
+<input type="number" id="font_size" value="10">pt
+<input type="checkbox" id="bold" checked>bold
+<input type="color" id="color">
+</form>
+<hr>
+<div id="sheet"></div>
+</body>
+</html>
